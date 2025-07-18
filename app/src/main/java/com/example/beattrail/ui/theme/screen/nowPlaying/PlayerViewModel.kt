@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import java.io.File
 
-class PlayerViewModel(private val context: Context, private val repository: SongRepository) : ViewModel() {
+class cd(private val context: Context, private val repository: SongRepository) : ViewModel() {
 
     private val _currentSong = MutableStateFlow<SongModel?>(null)
     val currentSong: StateFlow<SongModel?> = _currentSong.asStateFlow()
@@ -61,39 +61,44 @@ class PlayerViewModel(private val context: Context, private val repository: Song
 
     fun play(song: SongModel, songs: List<SongModel> = emptyList()) {
         viewModelScope.launch {
-            if (_currentSong.value?.id != song.id) {
-                _isLoading.value = true
+            _isLoading.value = true
+            /*if _currentSong.value?.id != song.id) {
+                songList.clear()
+                songList.addAll(songs)*/
+            if (songs.isNotEmpty()) {
                 songList.clear()
                 songList.addAll(songs)
-                currentIndex = songList.indexOfFirst { it.id == song.id }
-
-                _currentSong.value = song
-                _duration.value = 0L
-                _currentPosition.value = 0f
-
-                player.stop()
-                player.clearMediaItems()
-
-                /*val localFile = File(
-                    context.getExternalFilesDir(Environment.DIRECTORY_MUSIC),
-                    "${song.title}-${song.id}.mp3"
-                )*/
-
-                val uriToPlay = if (song.url.startsWith("http")) {
-                    song.url.toUri()
-                } else {
-                    Uri.fromFile(File(song.url))
-                }
-
-                player.setMediaItem(MediaItem.fromUri(uriToPlay))
-                player.prepare()
-                player.play()
-
-                _isLoading.value = false
-                _isPlayerVisible.value = true
-                _isPlaying.value = true
             }
+
+            // TEST COMMIT
+            currentIndex = songList.indexOfFirst { it.id == song.id }
+            _currentSong.value = song
+            _duration.value = 0L
+            _currentPosition.value = 0f
+
+            player.stop()
+            player.clearMediaItems()
+
+            /*val localFile = File(
+                context.getExternalFilesDir(Environment.DIRECTORY_MUSIC),
+                "${song.title}-${song.id}.mp3"
+            )*/
+
+            val uriToPlay = if (song.url.startsWith("http")) {
+                song.url.toUri()
+            } else {
+                Uri.fromFile(File(song.url))
+            }
+
+            player.setMediaItem(MediaItem.fromUri(uriToPlay))
+            player.prepare()
+            player.play()
+
+            _isLoading.value = false
+            _isPlayerVisible.value = true
+            _isPlaying.value = true
         }
+
     }
 
     fun emitNavigation(songId: Int) {
@@ -107,11 +112,10 @@ class PlayerViewModel(private val context: Context, private val repository: Song
 
         val newIndex = if (currentIndex - 1 >= 0) currentIndex - 1 else songList.size - 1
         val newSong = songList[newIndex]
-        play(newSong, songList)
         currentIndex = newIndex
 
         viewModelScope.launch {
-            play(newSong, songList)
+            play(newSong)
             _navigationEvent.emit(newSong.id)
         }
         return newSong
@@ -122,11 +126,10 @@ class PlayerViewModel(private val context: Context, private val repository: Song
 
         val newIndex = if (currentIndex + 1 < songList.size) currentIndex + 1 else 0
         val newSong = songList[newIndex]
-        play(newSong, songList)
         currentIndex = newIndex
 
         viewModelScope.launch {
-            play(newSong, songList)
+            play(newSong)
             _navigationEvent.emit(newSong.id)
         }
         return newSong
