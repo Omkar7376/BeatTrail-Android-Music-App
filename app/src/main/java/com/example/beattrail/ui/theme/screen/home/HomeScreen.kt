@@ -56,6 +56,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -83,6 +84,13 @@ fun HomeScreen(
     var sortOption by remember { mutableStateOf("title (A-Z)") }
 
     Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("BeatTrail", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Color.White) },
+                backgroundColor = Color.Gray,
+                contentColor = Color.White
+            )
+        },
         bottomBar = {
             Column {
                 if (isPlayerVisible && currentSong != null) {
@@ -127,13 +135,6 @@ fun HomeScreen(
                     )
                 }
             }
-        },
-        topBar = {
-            TopAppBar(
-                title = { Text("BeatTrail") },
-                backgroundColor = Color.Gray,
-                contentColor = Color.White
-            )
         }
     ) { padding ->
 
@@ -302,20 +303,21 @@ fun MiniPlayer(song: SongModel,isPlaying: Boolean, onClick: () -> Unit, onPlayPa
             .fillMaxWidth()
             .clickable { onClick() }
             .padding(8.dp)
-            .background(Color.DarkGray)
+            .background(Color.Gray)
     ) {
         AsyncImage(
             model = song.image,
             contentDescription = null,
             modifier = Modifier
                 .size(48.dp)
-                .clip(RoundedCornerShape(8.dp)),
+                .clip(RoundedCornerShape(8.dp))
+                .padding(2.dp),
             contentScale = ContentScale.Crop
         )
         Spacer(Modifier.width(8.dp))
         Column(Modifier.weight(1f)) {
             Text(song.title, color = Color.White)
-            Text(song.artist, color = Color.LightGray, fontSize = 12.sp)
+            Text(song.artist, color = Color.White, fontSize = 12.sp)
         }
         IconButton(onClick = onPlayPause) {
             Icon(

@@ -63,10 +63,10 @@ fun SavedScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Saved Songs")},
-                backgroundColor = Color.Black,
+                backgroundColor = Color.Gray,
                 contentColor = Color.White,
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 }

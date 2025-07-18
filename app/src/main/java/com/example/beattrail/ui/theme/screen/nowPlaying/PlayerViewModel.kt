@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import java.io.File
 
-class cd(private val context: Context, private val repository: SongRepository) : ViewModel() {
+class PlayerViewModel(private val context: Context, private val repository: SongRepository) : ViewModel() {
 
     private val _currentSong = MutableStateFlow<SongModel?>(null)
     val currentSong: StateFlow<SongModel?> = _currentSong.asStateFlow()
@@ -62,7 +62,7 @@ class cd(private val context: Context, private val repository: SongRepository) :
     fun play(song: SongModel, songs: List<SongModel> = emptyList()) {
         viewModelScope.launch {
             _isLoading.value = true
-            /*if _currentSong.value?.id != song.id) {
+            /*if (_currentSong.value?.id != song.id) {
                 songList.clear()
                 songList.addAll(songs)*/
             if (songs.isNotEmpty()) {
