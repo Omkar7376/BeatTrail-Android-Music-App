@@ -59,7 +59,6 @@ fun NowPlayingScreen(
         } ?: currentSong
     }
 
-
     if (isLoading || displaySong == null) {
         Box(
             modifier = Modifier.fillMaxSize(),

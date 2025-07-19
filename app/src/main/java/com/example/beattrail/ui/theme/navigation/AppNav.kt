@@ -1,6 +1,5 @@
 package com.example.beattrail.ui.theme.navigation
 
-import android.view.Surface
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material.Surface
@@ -15,7 +14,10 @@ import com.example.beattrail.ui.theme.screen.home.HomeViewModel
 import com.example.beattrail.ui.theme.screen.home.currentRoute
 import com.example.beattrail.ui.theme.screen.nowPlaying.NowPlayingScreen
 import com.example.beattrail.ui.theme.screen.nowPlaying.PlayerViewModel
+import com.example.beattrail.ui.theme.screen.playlist.PlayListScreen
+import com.example.beattrail.ui.theme.screen.recentSongs.RecentScreen
 import com.example.beattrail.ui.theme.screen.savedSongs.SavedScreen
+import com.example.beattrail.ui.theme.screen.settings.SettingsScreen
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -75,6 +77,24 @@ fun AppNav() {
                         playerViewModel.emitNavigation(song.id)
                     }
                 )
+            }
+
+            composable("recent"){
+                RecentScreen(
+                    playerViewModel = playerViewModel,
+                    onSongClick = { song, recentSong ->
+                        playerViewModel.play(song, recentSong)
+                        playerViewModel.emitNavigation(song.id)
+                    }
+                )
+            }
+
+            composable("playlist") {
+                PlayListScreen(navController)
+            }
+
+            composable("settings") {
+                SettingsScreen(navController)
             }
         }
     }

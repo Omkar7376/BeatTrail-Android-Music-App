@@ -1,6 +1,7 @@
 package com.example.beattrail.domain.mapper
 
 import android.util.Log
+import com.example.beattrail.data.local.entity.RecentSongEntity
 import com.example.beattrail.data.model.TrackDto
 import com.example.beattrail.domain.model.SongModel
 
@@ -13,6 +14,31 @@ fun TrackDto.toSongModel(): SongModel {
         url = audio,
         image = image,
         downloadUrl = audiodownload,
+        duration = duration
+    )
+}
+
+fun SongModel.toRecentSongEntity(): RecentSongEntity {
+    return RecentSongEntity(
+        id = id,
+        title = title,
+        artist = artist,
+        url = url,
+        image = image,
+        downloadUrl = downloadUrl,
+        duration = duration,
+        timestamp = System.currentTimeMillis()
+    )
+}
+
+fun RecentSongEntity.toSongModel(): SongModel {
+    return SongModel(
+        id = id,
+        title = title,
+        artist = artist,
+        url = url,
+        image = image,
+        downloadUrl = downloadUrl,
         duration = duration
     )
 }

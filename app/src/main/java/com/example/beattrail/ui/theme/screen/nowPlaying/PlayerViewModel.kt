@@ -14,13 +14,15 @@ import kotlinx.coroutines.launch
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import com.example.beattrail.data.repo.RecentSongRepo
 import com.example.beattrail.data.repo.SongRepository
+import com.example.beattrail.ui.theme.screen.recentSongs.RecentSongsViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import java.io.File
 
-class PlayerViewModel(private val context: Context, private val repository: SongRepository) : ViewModel() {
+class PlayerViewModel(private val context: Context, private val repository: SongRepository, private val recentRepo: RecentSongRepo) : ViewModel() {
 
     private val _currentSong = MutableStateFlow<SongModel?>(null)
     val currentSong: StateFlow<SongModel?> = _currentSong.asStateFlow()
@@ -93,6 +95,7 @@ class PlayerViewModel(private val context: Context, private val repository: Song
             player.setMediaItem(MediaItem.fromUri(uriToPlay))
             player.prepare()
             player.play()
+            recentRepo.addToRecent(song)
 
             _isLoading.value = false
             _isPlayerVisible.value = true

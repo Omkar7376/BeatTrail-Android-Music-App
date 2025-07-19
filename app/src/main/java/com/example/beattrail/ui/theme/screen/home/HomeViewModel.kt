@@ -5,7 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.beattrail.data.repo.SongRepository
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -33,6 +36,27 @@ class HomeViewModel(private val repository: SongRepository) : ViewModel() {
         }
     }
 
+    fun loadSongs() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            val response = repository.getSongs()
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    songs = response,
+                    filteredSongs = response
+                )
+            }
+        }
+    }
+
+    val searchQuery: StateFlow<String>
+        get() = _uiState.map { it.searchQuery }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            _uiState.value.searchQuery
+        )
+
     fun onSearchQueryChange(query: String) {
         _uiState.update { state ->
             val filteredSongs = if (query.isBlank()) state.songs else {
@@ -52,7 +76,6 @@ class HomeViewModel(private val repository: SongRepository) : ViewModel() {
             "Artist (Z-A)" -> _uiState.value.songs.sortedByDescending { it.artist.lowercase() }
             else -> _uiState.value.songs
         }
-
         _uiState.update { it.copy(filteredSongs = sorted) }
     }
 

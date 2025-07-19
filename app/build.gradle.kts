@@ -66,6 +66,7 @@ dependencies {
 
     // Jetpack Compose Material Components
     implementation("androidx.compose.material:material:1.6.0")
+    implementation("androidx.compose.material3:material3:1.2.1")
 
     // Ktor
     implementation("io.ktor:ktor-client-cio:3.1.0")

@@ -7,7 +7,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.runtime.*
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,6 +24,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.DropdownMenu
+import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.OutlinedButton
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
@@ -36,6 +38,9 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -59,6 +64,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.AsyncImage
@@ -67,6 +73,7 @@ import com.example.beattrail.ui.theme.screen.nowPlaying.PlayerViewModel
 import com.example.beattrail.ui.theme.screen.savedSongs.SavedSongsViewModel
 import org.koin.androidx.compose.koinViewModel
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = koinViewModel(),
@@ -81,7 +88,14 @@ fun HomeScreen(
     val isPlaying by playerViewModel.isPlaying.collectAsState()
     val savedSongsViewModel: SavedSongsViewModel = koinViewModel()
     var isScreenVisible by remember { mutableStateOf(false) }
-    var sortOption by remember { mutableStateOf("title (A-Z)") }
+    val sortOrder = remember { mutableStateOf("Title (A-Z)") }
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+
+
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = uiState.isLoading,
+        onRefresh = { viewModel.loadSongs() }
+    )
 
     Scaffold(
         topBar = {
@@ -107,90 +121,72 @@ fun HomeScreen(
                         selected = currentRoute == "home",
                         onClick = { onNavClick("Home") },
                         icon = { Icon(Icons.Default.Home, null) },
-                        label = { Text("Home") }
+                        label = { Text("Home", fontSize = 16.sp) }
                     )
                     BottomNavigationItem(
                         selected = currentRoute == "playlist",
                         onClick = { onNavClick("playlist") },
                         icon = { Icon(Icons.Default.List, null) },
-                        label = { Text("Playlist") }
+                        label = { Text("Playlist",fontSize = 16.sp) }
                     )
                     BottomNavigationItem(
                         selected = currentRoute == "saved",
                         onClick = { onNavClick("saved") },
                         icon = { Icon(Icons.Default.Download, null) },
-                        label = { Text("Saved") }
+                        label = { Text("Saved",fontSize = 16.sp) }
                     )
                     BottomNavigationItem(
                         selected = currentRoute == "recent",
                         onClick = { onNavClick("recent") },
                         icon = { Icon(Icons.Default.History, null) },
-                        label = { Text("Recent") }
+                        label = { Text("Recent",fontSize = 16.sp) }
                     )
                     BottomNavigationItem(
                         selected = currentRoute == "settings",
                         onClick = { onNavClick("settings") },
                         icon = { Icon(Icons.Default.Settings, null) },
-                        label = { Text("Settings") }
+                        label = { Text("Settings",fontSize = 16.sp) }
                     )
                 }
             }
         }
     ) { padding ->
 
-        Column(modifier = Modifier
-            .padding(padding)
-            .fillMaxSize()
-            .padding(16.dp)) {
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                IconButton(onClick = {isScreenVisible = !isScreenVisible}) {
-                    Icon(Icons.Default.Search, "Toggle search")
-                }
-            }
-
-            AnimatedVisibility(visible = isScreenVisible) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .pullRefresh(pullRefreshState)
+        ) {
+            Column(modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp))    {
                 OutlinedTextField(
-                    value = uiState.searchQuery,
-                    onValueChange =  viewModel::onSearchQueryChange,
-                    label = { Text("Search by Song or Artist") },
+                    value = searchQuery,
+                    onValueChange = { viewModel.onSearchQueryChange(it)},
+                    label = { Text("Search Songs") },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp)
+                        .padding(bottom = 8.dp)
                 )
-            }
 
-            Spacer(Modifier.height(8.dp))
-
-            if(isScreenVisible){
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween)
-                {
-                    Text("${uiState.filteredSongs.size} songs found")
-                    DropdownMenuBox(
-                        selectedOption = sortOption,
-                        options = listOf("title (A-Z)", "title (Z-A)", "artist (A-Z)", "artist (Z-A)")
-                        ) { selected ->
-                            sortOption = selected
-                            viewModel.sortSongs(selected)
-                    }
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("Sort By: ", modifier = Modifier.padding(end = 8.dp))
+                    DropdownMenuSort(
+                        selectedSortOrder = sortOrder.value,
+                        onSortOrderSelected = {
+                            sortOrder.value = it
+                            viewModel.sortSongs(it)
+                        }
+                    )
                 }
-            }
 
-            Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(6.dp))
 
-            if (uiState.isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    strokeWidth = 2.dp,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-            } else {
                 if (uiState.filteredSongs.isEmpty()) {
                     Text("No songs found")
                 } else {
@@ -203,16 +199,54 @@ fun HomeScreen(
                                 SongItemHome(
                                     song = song,
                                     onClick = { onSongClick(song) },
-                                    onDownloadClick = { savedSongsViewModel.saveSong(song)}
+                                    onDownloadClick = {
+                                        savedSongsViewModel.saveSong(song)
+                                    }
                                 )
                             }
                         }
                     }
                 }
             }
+            PullRefreshIndicator(
+                refreshing = uiState.isLoading,
+                state = pullRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
         }
     }
 }
+
+@Composable
+fun DropdownMenuSort(
+    selectedSortOrder: String,
+    onSortOrderSelected: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    val sortOptions = listOf("Title (A-Z)", "Title (Z-A)", "Artist (A-Z)", "Artist (Z-A)")
+
+    Box {
+        OutlinedButton(onClick = { expanded = true }) {
+            Text(selectedSortOrder)
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            sortOptions.forEach { option ->
+                DropdownMenuItem(onClick = {
+                    onSortOrderSelected(option)
+                    expanded = false
+                }) {
+                    Text(option)
+                }
+            }
+        }
+    }
+}
+
 
 @Composable
 fun currentRoute(navController: NavHostController): String? {
