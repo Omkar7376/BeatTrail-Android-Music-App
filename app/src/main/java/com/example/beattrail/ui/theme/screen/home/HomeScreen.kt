@@ -26,10 +26,15 @@ import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.OutlinedButton
+import androidx.compose.material.SnackbarHost
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
@@ -71,6 +76,7 @@ import coil.compose.AsyncImage
 import com.example.beattrail.domain.model.SongModel
 import com.example.beattrail.ui.theme.screen.nowPlaying.PlayerViewModel
 import com.example.beattrail.ui.theme.screen.savedSongs.SavedSongsViewModel
+import com.example.beattrail.ui.theme.screen.savedSongs.SongItemSaved
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -82,6 +88,8 @@ fun HomeScreen(
     onSongClick: (SongModel) -> Unit,
     onNavClick: (String) -> Unit
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
     val uiState by viewModel.uiState.collectAsState()
     val currentSong by playerViewModel.currentSong.collectAsState()
     val isPlayerVisible by playerViewModel.isPlayerVisible.collectAsState()
@@ -90,12 +98,27 @@ fun HomeScreen(
     var isScreenVisible by remember { mutableStateOf(false) }
     val sortOrder = remember { mutableStateOf("Title (A-Z)") }
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val downloadState by savedSongsViewModel.downloadState.collectAsState()
 
 
     val pullRefreshState = rememberPullRefreshState(
         refreshing = uiState.isLoading,
         onRefresh = { viewModel.loadSongs() }
     )
+
+    LaunchedEffect(downloadState) {
+        when (downloadState) {
+            is SavedSongsViewModel.DownloadState.Success -> {
+                val songId = (downloadState as SavedSongsViewModel.DownloadState.Success).songId
+                snackbarHostState.showSnackbar("Download complete for song ID: $songId")
+            }
+            is SavedSongsViewModel.DownloadState.Error -> {
+                val message = (downloadState as SavedSongsViewModel.DownloadState.Error).message
+                snackbarHostState.showSnackbar("Download failed: $message")
+            }
+            else -> {}
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -105,6 +128,7 @@ fun HomeScreen(
                 contentColor = Color.White
             )
         },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         bottomBar = {
             Column {
                 if (isPlayerVisible && currentSong != null) {
@@ -192,18 +216,12 @@ fun HomeScreen(
                 } else {
                     LazyColumn {
                         items(uiState.filteredSongs, key = { it.id }) { song ->
-                            AnimatedVisibility(
-                                visible = true,
-                                enter = fadeIn(animationSpec = tween(500)) + slideInVertically(),
-                            ) {
-                                SongItemHome(
-                                    song = song,
-                                    onClick = { onSongClick(song) },
-                                    onDownloadClick = {
-                                        savedSongsViewModel.saveSong(song)
-                                    }
-                                )
-                            }
+                            SongItemHome(
+                                song = song,
+                                onClick = { onSongClick(song) },
+                                onDownloadClick = { savedSongsViewModel.saveSong(song) },
+                                downloadState = downloadState
+                            )
                         }
                     }
                 }
@@ -255,7 +273,7 @@ fun currentRoute(navController: NavHostController): String? {
 }
 
 @Composable
-fun SongItemHome(song: SongModel, onClick: () -> Unit, onDownloadClick: () -> Unit) {
+fun SongItemHome(song: SongModel, downloadState: SavedSongsViewModel.DownloadState, onClick: () -> Unit, onDownloadClick: () -> Unit) {
 
     Row(
         modifier = Modifier
@@ -276,55 +294,26 @@ fun SongItemHome(song: SongModel, onClick: () -> Unit, onDownloadClick: () -> Un
             Text(text = song.title, fontWeight = FontWeight.Bold)
             Text(text = song.artist, style = MaterialTheme.typography.bodySmall)
         }
-
         Spacer(modifier = Modifier.weight(1f))
 
-        Box {
-            var expanded by remember { mutableStateOf(false) }
-            IconButton(onClick = { expanded = true }) {
-                Icon(Icons.Default.MoreVert, contentDescription = "More Options")
-            }
-
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text("Download") },
-                    onClick = {
-                        expanded = false
-                        onDownloadClick()
-                    }
+        when {
+            downloadState is SavedSongsViewModel.DownloadState.Downloading && downloadState.songId == song.id -> {
+                LinearProgressIndicator(
+                    progress = downloadState.progress / 100,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Text(
+                    text = "Progress: ${"%.1f".format(downloadState.progress)}%",
+                    fontSize = 12.sp
                 )
             }
         }
-    }
-}
-
-@Composable
-fun DropdownMenuBox(
-    selectedOption: String,
-    options: List<String>,
-    onOptionSelected: (String) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Box {
-        OutlinedButton(onClick = { expanded = true }) {
-            Text(selectedOption)
-        }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(option) },
-                    onClick = {
-                        onOptionSelected(option)
-                        expanded = false
-                    }
-                )
+        IconButton(onClick = onDownloadClick) {
+            when {
+                downloadState is SavedSongsViewModel.DownloadState.Downloading && downloadState.songId == song.id ->
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                else ->
+                    Icon(Icons.Default.Download, "Download")
             }
         }
     }
