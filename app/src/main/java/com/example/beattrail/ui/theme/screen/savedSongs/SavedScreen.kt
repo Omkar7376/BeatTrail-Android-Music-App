@@ -1,5 +1,6 @@
 package com.example.beattrail.ui.theme.screen.savedSongs
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -60,7 +61,6 @@ fun SavedScreen(
 ) {
     val savedSongs by savedSongsViewModel.savedSongs.collectAsState()
     val navController = rememberNavController()
-    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -69,32 +69,35 @@ fun SavedScreen(
                 backgroundColor = Color.Gray,
                 contentColor = Color.White,
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = { navController.popBackStack("home", true) }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
         }
     ) { padding ->
-        if (savedSongs.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .padding(padding)
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("No Saved Songs yet")
-            }
-        } else {
-            LazyColumn {
-                items(savedSongs, key = { it.id }) { song ->
-                    SongItemSaved(
-                        song = song,
-                        onClick = { onSongClick(song) },
-                        onRemoveClick = {
-                            savedSongsViewModel.removeSong(song)
-                        }
-                    )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .background(MaterialTheme.colorScheme.surface)
+
+        ) {
+            if (savedSongs.isEmpty()) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    Text("No Saved Songs yet")
+                }
+            } else {
+                LazyColumn {
+                    items(savedSongs, key = { it.id }) { song ->
+                        SongItemSaved(
+                            song = song,
+                            onClick = { onSongClick(song) },
+                            onRemoveClick = {
+                                savedSongsViewModel.removeSong(song)
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -128,8 +131,8 @@ fun SongItemSaved(
         Spacer(Modifier.width(12.dp))
 
         Column(Modifier.weight(1f)) {
-            Text(text = song.title, fontWeight = FontWeight.Bold)
-            Text(text = song.artist, style = MaterialTheme.typography.bodySmall)
+            Text(text = song.title, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            Text(text = song.artist, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
         }
 
         Box(Modifier.wrapContentWidth(Alignment.End)) {

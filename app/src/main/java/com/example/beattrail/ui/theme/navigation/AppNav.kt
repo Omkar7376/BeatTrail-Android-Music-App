@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.beattrail.ui.theme.ThemeViewModel
 import com.example.beattrail.ui.theme.screen.home.HomeScreen
 import com.example.beattrail.ui.theme.screen.home.HomeViewModel
 import com.example.beattrail.ui.theme.screen.home.currentRoute
@@ -21,7 +22,7 @@ import com.example.beattrail.ui.theme.screen.settings.SettingsScreen
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun AppNav() {
+fun AppNav(themeViewModel: ThemeViewModel) {
     val navController = rememberNavController()
     val homeViewModel : HomeViewModel = koinViewModel()
     val playerViewModel : PlayerViewModel = koinViewModel()
@@ -94,7 +95,7 @@ fun AppNav() {
             }
 
             composable("settings") {
-                SettingsScreen(navController)
+                SettingsScreen(themeViewModel = themeViewModel)
             }
         }
     }

@@ -69,6 +69,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.toColorInt
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -77,6 +78,7 @@ import com.example.beattrail.domain.model.SongModel
 import com.example.beattrail.ui.theme.screen.nowPlaying.PlayerViewModel
 import com.example.beattrail.ui.theme.screen.savedSongs.SavedSongsViewModel
 import com.example.beattrail.ui.theme.screen.savedSongs.SongItemSaved
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -246,7 +248,7 @@ fun DropdownMenuSort(
 
     Box {
         OutlinedButton(onClick = { expanded = true }) {
-            Text(selectedSortOrder)
+            Text(selectedSortOrder, color = Color.Black)
         }
 
         DropdownMenu(
@@ -258,7 +260,7 @@ fun DropdownMenuSort(
                     onSortOrderSelected(option)
                     expanded = false
                 }) {
-                    Text(option)
+                    Text(option,color = Color.Black)
                 }
             }
         }

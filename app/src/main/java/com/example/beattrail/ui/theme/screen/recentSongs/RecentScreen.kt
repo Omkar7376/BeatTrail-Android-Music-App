@@ -145,7 +145,7 @@ fun SongItemRecent(
                 onDismissRequest = { expanded = false }
             ) {
                 DropdownMenuItem(
-                    text = { Text("Remove from Recent") },
+                    text = { Text("Remove from Recent",color = MaterialTheme.colorScheme.onSurface) },
                     onClick = {
                         expanded = false
                         onRemoveClick()

@@ -7,6 +7,9 @@ import com.example.beattrail.data.local.AppDatabase
 import com.example.beattrail.data.repo.RecentSongRepo
 import com.example.beattrail.data.repo.SavedSongRepository
 import com.example.beattrail.data.repo.SongRepository
+import com.example.beattrail.datastore.DataStoreManager
+import com.example.beattrail.datastore.dataStore
+import com.example.beattrail.ui.theme.ThemeViewModel
 import com.example.beattrail.ui.theme.screen.home.HomeViewModel
 import com.example.beattrail.ui.theme.screen.nowPlaying.PlayerViewModel
 import com.example.beattrail.ui.theme.screen.recentSongs.RecentSongsViewModel
@@ -52,6 +55,8 @@ val appModule = module {
 
     single { RecentSongRepo(get()) }
 
+    single { DataStoreManager(androidContext()) }
+
     viewModel { RecentSongsViewModel(get()) }
 
     viewModel { HomeViewModel(get()) }
@@ -59,5 +64,7 @@ val appModule = module {
     viewModel { PlayerViewModel(androidContext(),get(),get()) }
 
     viewModel { SavedSongsViewModel(get(),get()) }
+
+    viewModel { ThemeViewModel(get()) }
 
 }

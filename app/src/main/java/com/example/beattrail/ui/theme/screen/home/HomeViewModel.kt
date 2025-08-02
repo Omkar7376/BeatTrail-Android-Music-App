@@ -1,6 +1,7 @@
 package com.example.beattrail.ui.theme.screen.home
 
 import android.util.Log
+import androidx.core.graphics.toColorInt
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.beattrail.data.repo.SongRepository
